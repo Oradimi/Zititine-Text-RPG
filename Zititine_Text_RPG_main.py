@@ -722,7 +722,7 @@ def combat(Player, Enemy, Inventory, Priority): #définit le déroulement d'un c
 	while Enemy.hp > 0: #tant que l'ennemi est vivant
 		if player_turn: #si c'est au tour du joueur
 			print("\nTour", time)
-			option = input("Que voulez-vous faire ?\n> ")
+			option = input("Que voulez-vous faire ?\n - attaquer\n - défense\n - inventaire\n - fuir\n> ")
 			option = option.lower() #convertit le texte entré en des caractères minuscules uniquement
 			if option in ["attaquer", "attaque"]: #si le joueur choisit d'attaquer
 				die = die_roll() #lance un dé à 100 faces
