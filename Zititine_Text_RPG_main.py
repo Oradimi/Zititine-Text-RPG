@@ -322,12 +322,12 @@ room_investigated = {'a1': False, 'a2': False, 'a3': False, 'a4': False,
 #je crée un dictionaire pour la carte, et à l'intérieur les cases avec leur description etc.
 carte = {
 	'a1': {
-		DESCRIPTION: "\nVous êtes près d'un grand arbre avec une ombre imposante.",
-		EVENT: '\nOh mon dieu, une feuille !',
-		UP: 'a1',
-		DOWN: 'b1',
-		LEFT: 'a1',
-		RIGHT: 'a2',
+		DESCRIPTION: "\nVous êtes près d'un grand arbre avec une ombre imposante.", #description du lieu (nom, ce qu'on voit autour)
+		EVENT: '\nOh mon dieu, une feuille !', #description de l'évenement sur cette case
+		UP: 'a1', #case au dessus
+		DOWN: 'b1', #case en dessous
+		LEFT: 'a1', #case  à gauche
+		RIGHT: 'a2', #case à droite
 	},
 	'a2': {
 		DESCRIPTION: '\nAutour de vous, les herbes sont de plus en plus hautes.',
@@ -455,7 +455,7 @@ carte = {
 
 def prompt(): #demande au joueur ce qu'il veut faire
 	print(carte[player.pos][DESCRIPTION]) #affiche la description du lieu
-	choice = input("\nQue voulez-vous faire ?\n - chercher\n - se déplacer\n - inventaire\n - statut\n> ")
+	choice = input("\nQue voulez-vous faire ?\n - chercher\n - se déplacer\n - inventaire\n - statut\n> ") #on lui demande ce qu'il veut faire
 	choice = choice.lower() #met tout texte entré en minuscule
 	while choice not in ["chercher", "cherche", "se deplacer", "se déplacer", "inventaire", "objets", "statut", "stats", "statistiques", "quitter"]:
 		choice = input("\nEntrez un choix valide.\n> ") #affiche "Entrez un choix valide." si la saisie n'est pas bonne
@@ -477,27 +477,27 @@ def prompt(): #demande au joueur ce qu'il veut faire
 		sys.exit()
 
 def move(): #retourne la case correspondante en fonction de direction du joueur
-	direction = input("\nDans quelle direction souhaitez-vous aller ?\n> ")
+	direction = input("\nDans quelle direction souhaitez-vous aller ?\n> ") #demande ver où il veut aller
 	direction = direction.lower()
 	while direction not in ["haut", "bas", "gauche", "droite", "sud", "nord", "est", "ouest"]:
 		direction = input("\nEntrez un choix valide.\n> ")
 		direction = direction.lower()
-	if direction in ["bas", "sud"]:
-		return carte[player.pos][DOWN]
-	if direction in ["haut", "nord"]:
-		return carte[player.pos][UP]
-	if direction in ["droite", "est"]:
-		return carte[player.pos][RIGHT]
+	if direction in ["bas", "sud"]: 
+		return carte[player.pos][DOWN] #si il veut aller en bas, player.pos prend la valeur DOWN 
+	if direction in ["haut", "nord"]: 
+		return carte[player.pos][UP] #si il veut aller en haut, player.pos prend la valeur UP 
+	if direction in ["droite", "est"]: 
+		return carte[player.pos][RIGHT] #si il veut aller à droite, player.pos prend la valeur RIGHT 
 	if direction in ["gauche", "ouest"]:
-		return carte[player.pos][LEFT]
+		return carte[player.pos][LEFT] #si il veut aller à gauche, player.pos prend la valeur LEFT
 
 def event(): #lance l'évènement de la case si elle n'est pas déjà visitée
-	if room_investigated[player.pos] == False:
+	if room_investigated[player.pos] == False: #la case n'a pas été visité
 		print(carte[player.pos][EVENT])
 		pos = player.pos
 		event_action(pos)
 	else:
-		print("\nIl n'y a plus rien à chercher dans cette zone.")
+		print("\nIl n'y a plus rien à chercher dans cette zone.") #sinon, ne fais rien
 
 def event_action(pos): #enclenche un évènement en fonction de la case
 	global fail, clear
