@@ -501,21 +501,21 @@ def event(): #lance l'évènement de la case si elle n'est pas déjà visitée
 
 def event_action(pos): #enclenche un évènement en fonction de la case
 	global fail, clear
-	if pos == "a1":
-		combat(player, monsters[0], player_inv, 0)
-	elif pos == "a2":
-		print("\nChoisissez un de ces objets :")
-		print(" - Jus d'orange concentré\n - Rempart magique")
+	if pos == "a1": #si le joueur est sur la case a1
+		combat(player, monsters[0], player_inv, 0) #le combat avec le premier monstre se lance
+	elif pos == "a2": #si le joueur est sur la case a2
+		print("\nChoisissez un de ces objets :") 
+		print(" - Jus d'orange concentré\n - Rempart magique") #propose 2 objets au joueur
 		choice = input("> ")
 		choice = choice.lower()
-		if choice == "jus d'orange concentré":
-			player_inv.add_item(objects[3])
-			fail = False
-		elif choice == "rempart magique":
-			player_inv.add_item(objects[4])
-			fail = False
+		if choice == "jus d'orange concentré": #si il choisit le jus d'orange concentré
+			player_inv.add_item(objects[3]) #l'objet 3 s'ajoute à l'inventaire
+			fail = False #succès de l'événement
+		elif choice == "rempart magique": #si il choisit le rempart magique
+			player_inv.add_item(objects[4]) #l'objet 4 s'ajoute à l'inventaire
+			fail = False #succès de l'événement
 		else:
-			fail = True
+			fail = True #échec de l'événement
 	elif pos == "a3":
 		combat(player, monsters[1], player_inv, 1)
 		if fail == False:
