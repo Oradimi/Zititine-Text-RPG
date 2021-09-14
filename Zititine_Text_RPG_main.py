@@ -668,6 +668,7 @@ def game_loop():
 def combat(Player, Enemy, Inventory, Priority): #définit le déroulement d'un combat
 
 	global defense_stance, powerful_attack, fail, clear #définit des variables globales
+	fail = False
 	defense_stance = False #initialise la position défensive du joueur à "non"
 	powerful_attack = False #initialise la position offensive de l'ennemi à "attaque normale"
 	Enemy = deepcopy(Enemy) #crée une copie de l'objet dans la mémoire de l'ordinateur pour ne pas toucher aux données d'origine
@@ -719,7 +720,7 @@ def combat(Player, Enemy, Inventory, Priority): #définit le déroulement d'un c
 	powerful_attack_time = [] #définit les tours sur lesquels l'ennemi va lancer sa grosse attaque
 	for i in range(0, 20): #ajoute une attaque puissante tous les environs 3 tours
 		powerful_attack_time.append(randint(i*3 + 2, i*3 + 4))
-	while Enemy.hp > 0: #tant que l'ennemi est vivant
+	while Enemy.hp > 0 and fail == False: #tant que l'ennemi est vivant
 		if player_turn: #si c'est au tour du joueur
 			print("\nTour", time)
 			option = input("Que voulez-vous faire ?\n - attaquer\n - défense\n - inventaire\n - statut\n - fuir\n> ")
@@ -768,10 +769,8 @@ def combat(Player, Enemy, Inventory, Priority): #définit le déroulement d'un c
 						player.pos = carte[player.pos][LEFT]
 					print("\nSuccès !")
 					input("Sauve qui peut ! (Appuyez sur Entrée)")
-					Enemy.hp = -100 #permet de finir complètement le combat. L'ennemi étant une copie de l'original, cela ne pose pas de problème
 					player_turn = True
 					fail = True #permet d'éviter que je joueur obtienne la récompense en fuyant le combat
-					prompt()
 				else:
 					input("Échec !")
 					player_turn = False
