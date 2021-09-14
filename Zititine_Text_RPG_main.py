@@ -88,24 +88,24 @@ class Consummable(Item):
 		self.hpmax = hpmax
 		self.duration = duration
 	
-	def use(player, item):
-		player.hpmax += item.hpmax
-		player.hp += item.hp
+	def use(player, item): #fonction d'utilisation d'un consommable
+		player.hpmax += item.hpmax #ajoute des PVs max
+		player.hp += item.hp #régénère des PVs
 		if player.hp > player.hpmax:
-			player.hp = player.hpmax
-		if item.duration > 0:
-			player.effects.append(deepcopy(item))
+			player.hp = player.hpmax #si les PVs régénérés excèdent les PVs max, réduire les PVs aux PVs max
+		if item.duration > 0: #si le consommable a une durée
+			player.effects.append(deepcopy(item)) #ajouter le consommable dans la liste de buffs du joueur
 		
 """Les différents objets du jeu sont rassemblés dans des catégories,
    et chacune est une liste avec plusieurs objets listés, avec :
    > nom, attaque, armure, agilité, PVs, PVs max, durabilité
 """
 objects = [Consummable("Miche de pain", 0, 0, 0, 3, 0, 0),
-		   Consummable("Potion de vitalité", 0, 0, 0, 15, 5, 0),
+		   Consummable("Potion de vitalité", 1, 0, 5, 15, 5, 2),
 		   Consummable("Grand verre d'eau", 0, 0, 10, 1, 0, 3),
 		   Consummable("Jus d'orange concentré", 2, 0, 0, 0, 0, 4),
-		   Consummable("Rempart magique", 0, 2, -20, 0, 0, 2),
-		   Consummable("Potion qui brille fort", 5, 5, 20, 5, 5, 2)]
+		   Consummable("Rempart magique", 0, 4, -20, 0, 0, 3),
+		   Consummable("Potion qui brille fort", 3, 3, 15, 5, 5, 2)]
 
 #====> Setup inventaire
 
@@ -134,9 +134,9 @@ class Inventory:
 					action(player, item)
 					self.slots.pop(check)
 					return True
-			if found == False and choice != "annuler":
+			if found == False and choice != "annuler" or found == False and action == do_nothing:
 				print("\nNom d'objet invalide.")
-			elif choice == "annuler":
+			elif choice == "annuler" and action != do_nothing:
 				found = True
 				return False
 
@@ -183,7 +183,7 @@ class Player(Being):
 	"""Le joueur avec tous ses attributs initiaux :
 	> nom, attaque, armure, agilité, PVs, PVs max
 	> casque, armure, bottes, épée, bouclier
-	> inventaire, position
+	> buffs, position
 	"""
 	def __init__(self):
 		self.name = ""
@@ -210,28 +210,28 @@ class Player(Being):
 
 	def get_stat(self, stat):
 		"""Fonction pour récupérer les stats du joueur avec les bonus de tous ses équipements :
-		> son propre stat, et ceux fournis par son casque, son armure, ses bottes, son épée, son bouclier
+		> son propre stat, et ceux fournis par son casque, son armure, ses bottes, son épée, son bouclier, ses buffs
 		"""
-		if stat == StatType.ATK:
-			equip_stat = self.atk + self.helmet.atk + self.armor.atk + self.boot.atk + self.sword.atk
+		if stat == StatType.ATK: #si la fonction demande récupérer les stats d'attaque
+			equip_stat = self.atk + self.helmet.atk + self.armor.atk + self.boot.atk + self.sword.atk #stats des équipements
 			buff = 0
 			for i in range(0, len(self.effects)):
-				buff += self.effects[i].atk
-			return equip_stat + buff
-		if stat == StatType.ARM:
+				buff += self.effects[i].atk #addition des stats des objets de buff
+			return equip_stat + buff #renvoie l'attaque totale du joueur
+		if stat == StatType.ARM: #même chose pour la défense
 			equip_stat = self.arm + self.helmet.arm + self.armor.arm + self.boot.arm + self.sword.arm
 			buff = 0
 			for i in range(0, len(self.effects)):
 				buff += self.effects[i].arm
 			return equip_stat + buff
-		if stat == StatType.AGI:
+		if stat == StatType.AGI: #même chose pour l'agilité
 			equip_stat = self.agi + self.helmet.agi + self.armor.agi + self.boot.agi + self.sword.agi
 			buff = 0
 			for i in range(0, len(self.effects)):
 				buff += self.effects[i].agi
 			return equip_stat + buff
 
-	def add_equipment(self, type, equipment):
+	def add_equipment(self, type, equipment): #fonction qui ajoute un équipement au joueur
 		ditch = "\nSouhaitez-vous jeter votre équipement contre ceci ?"
 		print("\nVous devez remplacer et jeter votre équipement actuel pour équipper le nouveau.")
 		self.print_equip() #montre au joueur la liste de ses équipements avec leurs stats
@@ -239,39 +239,31 @@ class Player(Being):
 			print(ditch, equipment.name, "(Atq:", equipment.atk, "; Def:", equipment.arm, "; Agi:", equipment.agi, ")")
 			choice = input("> ")
 			if choice in ["oui", "ouais", "yup"]:
-				setattr(self, type, equipment)
+				setattr(self, type, equipment) #si oui, remplace l'équipement
 				input("\nÉquipement remplacé !")
 			elif choice in ["non", "nan", "nope"]:
-				pass
+				pass #sinon, ne fait rien
 			else:
 				print("\nEntrez une commande valide !")
 				equip_ditch(type)
 		equip_ditch(type)
 
-	def check_buff(self):
-		delete_item = 0
-		for decrease in range(0, len(self.effects)):
-			self.effects[decrease].duration -= 1
-			if self.effects[decrease].duration == 0:
-				delete_item += 1
-		check = 0
-		while check < delete_item:
-			if self.effects[check].duration == 0:
-				self.effects.pop(check)
-				delete_item -= 1
-				check -= 1
-			check += 1
+	def check_buff(self): #fonction qui vérifie l'état des buffs
+		for decrease in range(len(self.effects) - 1, -1, -1): #pour tous les buffs du joueur
+			self.effects[decrease].duration -= 1 #réduire la durée
+			if self.effects[decrease].duration <= 0:
+				self.effects.pop(decrease) #si la durée atteint 0, supprimer le buff
 	
-	def status_display(self):
-		print("\nNom :", self.name)
-		print("PVs :", self.hp, "/", self.hpmax)
-		print("Atq :", self.get_stat(StatType.ATK))
-		print("Def :", self.get_stat(StatType.ARM))
-		print("Agi :", self.get_stat(StatType.AGI))
+	def status_display(self): #fonction qui montre le statut du joueur
+		print("\nNom :", self.name) #nom du joueur
+		print("PVs :", self.hp, "/", self.hpmax) #PVs du joueur
+		print("Atq :", self.get_stat(StatType.ATK)) #attaque du joueur
+		print("Def :", self.get_stat(StatType.ARM)) #défense du joueur
+		print("Agi :", self.get_stat(StatType.AGI)) #agilité du joueur
 		self.print_equip() #montre au joueur la liste de ses équipements avec leurs stats
 		if len(self.effects) != False: #si la liste de buffs n'est pas vide
 			print("\nObjets de buff actifs :")
-			for show in range(0, len(self.effects)):
+			for show in range(0, len(self.effects)): #montrer les buffs actifs et leurs tours restants
 				print(" -", self.effects[show].name, "(" + str(self.effects[show].duration) + " tours restants)")
 
 player = Player()
@@ -288,11 +280,11 @@ class Enemy(Being):
    > nom, attaque, armure, PVs, PVs max
 """
 monsters = [Enemy("Feuille", 1.3, 0, 4, 4),
-			Enemy("T-rex des eaux", 5, 2, 10, 10),
+			Enemy("T-rex des eaux", 6, 2, 10, 10),
 			Enemy("Serpent", 4, 1, 5, 5),
 			Enemy("Énorme rat ", 4, 1, 8, 8),
-			Enemy("Sbire de Zititine", 6, 3, 12, 12),
-			Enemy("Zititine le pas cool", 10, 4, 25, 25)]
+			Enemy("Sbire de Zititine", 8, 2, 12, 12),
+			Enemy("Zititine le pas cool", 13, 4, 25, 25)]
 
 #====> Autre
 
@@ -526,6 +518,9 @@ def event_action(pos): #enclenche un évènement en fonction de la case
 			fail = True
 	elif pos == "a3":
 		combat(player, monsters[1], player_inv, 1)
+		if fail == False:
+			print("\nEn mourant, le T-rex vomit des Chaussures qui semblent très légères !")
+			player.add_equipment("boot", boots[4])
 	elif pos == "a4":
 		player_inv.add_item(objects[0])
 		fail = False
@@ -535,12 +530,15 @@ def event_action(pos): #enclenche un évènement en fonction de la case
 		fail = False
 	elif pos == "b2":
 		combat(player, monsters[2], player_inv, 0)
+		if fail == False:
+			print("\nÀ votre plus grand étonnement, le serpent crache une épée en mourant.")
+			player.add_equipment("sword", swords[2])
 	elif pos == "b3":
+		print("\nMais vous trouvez une Épée en bois par terre.")
+		player.add_equipment("sword", swords[1])
 		fail = False
 	elif pos == "b4":
-		print("\nUne fontaine avec 5 verres d'eau quelle chance !")
-		player_inv.add_item(objects[2])
-		player_inv.add_item(objects[2])
+		print("\nUne fontaine avec 3 verres d'eau, quelle chance !")
 		player_inv.add_item(objects[2])
 		player_inv.add_item(objects[2])
 		player_inv.add_item(objects[2])
@@ -551,7 +549,6 @@ def event_action(pos): #enclenche un évènement en fonction de la case
 		player.pos = "a4"
 	elif pos == "c2":
 		player.add_equipment("armor", armors[3])
-		print("\nVous obtenez une Armure en Fer.")
 		fail = False
 	elif pos == "c3":
 		room_investigated[player.pos] = True
@@ -670,10 +667,10 @@ def game_loop():
 
 def combat(Player, Enemy, Inventory, Priority): #définit le déroulement d'un combat
 
-	global defense_stance, powerful_attack, fail
-	defense_stance = False
-	powerful_attack = False
-	Enemy = deepcopy(Enemy)
+	global defense_stance, powerful_attack, fail, clear #définit des variables globales
+	defense_stance = False #initialise la position défensive du joueur à "non"
+	powerful_attack = False #initialise la position offensive de l'ennemi à "attaque normale"
+	Enemy = deepcopy(Enemy) #crée une copie de l'objet dans la mémoire de l'ordinateur pour ne pas toucher aux données d'origine
 
 	def dmg_calculator(multiplier): #calcule les dommages en fonction d'un multiplieur
 		global defense_stance
@@ -685,7 +682,7 @@ def combat(Player, Enemy, Inventory, Priority): #définit le déroulement d'un c
 			if Enemy.hp < 0:
 				Enemy.hp = 0 #évite une situation ou le personnage aurait une valeur négative de PVs
 		else: #si l'ennemi attaque
-			if defense_stance == True:
+			if defense_stance == True: #si le joueur est en position défensive, ajoute
 				damage = int(multiplier * Enemy.atk - (Player.get_stat(StatType.ARM) + Player.shield.arm))
 				defense_stance = False
 			else:
@@ -751,16 +748,16 @@ def combat(Player, Enemy, Inventory, Priority): #définit le déroulement d'un c
 				player_turn = False
 			elif option in ["inventaire", "objets"]: #si le joueur choisit de consulter son inventaire
 				item_chosen = Inventory.select_item() #accède au menu de sélection de l'inventaire, dans le fichier "Objects"
-				if item_chosen == False:
+				if item_chosen == False: #si aucun item n'est choisi, rejouer le tour du joueur
 					player_turn = True
 				else:
-					player_turn = False
+					player_turn = False #sinon, passer au tour de l'ennemi
 			elif option in ["statut", "stats", "statistiques"]:
 				Player.status_display()
 			elif option in ["fuir", "oof"]: #si le joueur choisit de fuir
 				die = die_roll() #lance un dé à 100 faces
-				if die <= Player.get_stat(StatType.AGI):
-					direction = randint(0, 3)
+				if die <= Player.get_stat(StatType.AGI): #si le dé est inférieur à l'agilité du joueur
+					direction = randint(0, 3) #définit aléatoirement la case adjacente ou le joueur va fuir
 					if direction == 0:
 						player.pos = carte[player.pos][DOWN]
 					if direction == 1:
@@ -773,8 +770,7 @@ def combat(Player, Enemy, Inventory, Priority): #définit le déroulement d'un c
 					input("Sauve qui peut ! (Appuyez sur Entrée)")
 					Enemy.hp = -100 #permet de finir complètement le combat. L'ennemi étant une copie de l'original, cela ne pose pas de problème
 					player_turn = True
-					global fail
-					fail = True
+					fail = True #permet d'éviter que je joueur obtienne la récompense en fuyant le combat
 					prompt()
 				else:
 					input("Échec !")
